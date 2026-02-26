@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>QR Studio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="app">
+    <div class="card">
+
+        <!-- LEFT PANEL -->
+        <div class="left">
+
+            <h1>QR Studio</h1>
+            <p class="subtitle">Create stylish QR codes instantly</p>
+
+            <form id="qrForm">
+
+                <!-- CONTENT -->
+                <label>Content</label>
+                <input type="text" name="data" placeholder="Enter URL or text" required>
+
+                <!-- THEME -->
+                <label>Theme</label>
+                <select name="theme" class="theme-select">
+                    <option value="">Custom</option>
+                    <option value="classic">Classic</option>
+                    <option value="midnight">Midnight</option>
+                    <option value="ocean">Ocean</option>
+                    <option value="sunset">Sunset</option>
+                    <option value="forest">Forest</option>
+                    <option value="royal">Royal</option>
+                </select>
+
+                <!-- CUSTOM COLORS -->
+                <div class="color-row">
+                    <div class="color-group">
+                        <label>QR Color</label>
+                        <input type="color" name="qr_color" value="#000000">
+                    </div>
+
+                    <div class="color-group">
+                        <label>Background</label>
+                        <input type="color" name="bg_color" value="#ffffff">
+                    </div>
+                </div>
+
+                <!-- GRADIENT SECTION -->
+                <div class="gradient-section">
+
+                    <label class="gradient-toggle">
+                        <input type="checkbox" name="gradient" id="gradientToggle">
+                        Enable Gradient
+                    </label>
+
+                    <div id="gradientControls" class="gradient-controls">
+
+                        <!-- Preset -->
+                        <div class="color-group">
+                            <label>Gradient Preset</label>
+                            <select id="gradientPreset" class="theme-select small-select">
+                                <option value="">Custom</option>
+                                <option value="instagram">Instagram</option>
+                                <option value="sunset">Sunset Glow</option>
+                                <option value="ocean">Ocean Blue</option>
+                                <option value="neon">Neon Purple</option>
+                                <option value="fire">Fire Red</option>
+                                <option value="mint">Mint Fresh</option>
+                            </select>
+                        </div>
+
+                        <!-- Start Color -->
+                        <div class="color-group">
+                            <label>Start Color</label>
+                            <input type="color" name="grad_color1" value="#ff512f">
+                        </div>
+
+                        <!-- End Color -->
+                        <div class="color-group">
+                            <label>End Color</label>
+                            <input type="color" name="grad_color2" value="#0072ff">
+                        </div>
+
+                        <!-- Gradient Type -->
+                        <div class="color-group">
+                            <label>Gradient Type</label>
+                            <select name="gradient_type" class="theme-select small-select">
+                                <option value="vertical">Vertical</option>
+                                <option value="horizontal">Horizontal</option>
+                                <option value="diagonal">Diagonal</option>
+                                <option value="radial">Radial</option>
+                            </select>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- GENERATE BUTTON -->
+                <button type="submit">Generate QR</button>
+
+            </form>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="right">
+            <div class="preview-box">
+                <p>QR Preview</p>
+
+                <img id="qrImage" class="qr-preview" style="display:none;">
+
+                <a id="downloadLink" download style="display:none;">
+                    <button type="button" class="download-btn">Download QR</button>
+                </a>
+
+                <div id="placeholder" class="placeholder">
+                    Your QR will appear here
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+const form = document.getElementById("qrForm");
+const qrImage = document.getElementById("qrImage");
+const downloadLink = document.getElementById("downloadLink");
+const placeholder = document.getElementById("placeholder");
+
+function generateQR() {
+    const formData = new FormData(form);
+
+    fetch("/generate", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        const imageUrl = data.image_url + "?t=" + new Date().getTime();
+
+        qrImage.src = imageUrl;
+        qrImage.style.display = "block";
+
+        downloadLink.href = data.image_url;
+        downloadLink.style.display = "block";
+
+        placeholder.style.display = "none";
+    });
+}
+
+// Submit
+form.addEventListener("submit", function(e) {
+    e.preventDefault();
+    generateQR();
+});
+
+// Gradient Toggle
+const toggle = document.getElementById("gradientToggle");
+const controls = document.getElementById("gradientControls");
+controls.style.display = "none";
+
+toggle.addEventListener("change", function() {
+    controls.style.display = this.checked ? "flex" : "none";
+    generateQR();
+});
+
+// Presets
+const presetSelect = document.getElementById("gradientPreset");
+const startColor = document.querySelector('[name="grad_color1"]');
+const endColor = document.querySelector('[name="grad_color2"]');
+
+const presets = {
+    instagram: ["#feda75", "#d62976"],
+    sunset: ["#ff512f", "#dd2476"],
+    ocean: ["#2193b0", "#6dd5ed"],
+    neon: ["#8e2de2", "#4a00e0"],
+    fire: ["#ff0000", "#ff9900"],
+    mint: ["#00b09b", "#96c93d"]
+};
+
+presetSelect.addEventListener("change", function() {
+    const selected = presets[this.value];
+    if (selected) {
+        startColor.value = selected[0];
+        endColor.value = selected[1];
+        generateQR();
+    }
+});
+
+// Auto regenerate on change
+["theme", "gradient_type", "grad_color1", "grad_color2"]
+.forEach(name => {
+    const el = document.querySelector(`[name="${name}"]`);
+    if (el) {
+        el.addEventListener("change", generateQR);
+    }
+});
+</script>
+
+</body>
+</html>
