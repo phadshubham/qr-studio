@@ -57,5 +57,5 @@ Upload a logo to embed in the center of the QR code.
 Clone the repository:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/qr-studio.git
+git clone https://github.com/phadshubham/qr-studio.git
 cd qr-studio
